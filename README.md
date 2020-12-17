@@ -29,7 +29,7 @@ For more information contact angganurprasetya4@gmail.com
 
 **Data**
 
-[Listen Notes](https://listennotes.com)
+[WeatherApi](https://www.weatherapi.com/)
 
 ### Hava App Final UI
 ![App UI](https://github.com/prasetyanurangga/hava/raw/main/hava_app_ui.png)
