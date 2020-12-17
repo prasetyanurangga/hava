@@ -7,10 +7,17 @@ Forecast App
 - [Flutter Svg](https://pub.dev/packages/flutter_svg)
 - [Flutter Bloc](https://pub.dev/packages/flutter_bloc)
 - [Google Fonts](https://pub.dev/packages/google_fonts)
-- [Just Audio](https://pub.dev/packages/just_audio)
-- [Cached network image](https://pub.dev/packages/cached_network_image)
-- [Flutter Animation Progress Bar](https://pub.dev/packages/flutter_animation_progress_bar)
-
+- [Geolocator](https://pub.dev/packages/geolocator)
+- [Geocoding](https://pub.dev/packages/geocoding)
+- [Weather Icons](https://pub.dev/packages/weather_icons)
+- [Dio](https://pub.dev/packages/dio)
+- [Bloc](https://pub.dev/packages/bloc)
+- [Intl](https://pub.dev/packages/intl)
+- [Flutter Zoom Drawer](https://pub.dev/packages/flutter_zoom_drawer)
+- [Loader Overlay](https://pub.dev/packages/loader_overlay)
+- [Smooth Page Indicator](https://pub.dev/packages/smooth_page_indicator)
+- [Equatable](https://pub.dev/packages/Equatable)
+    
 **Fonts**
 
 -  [Poppins](https://fonts.google.com/specimen/Poppins)
