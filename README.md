@@ -34,5 +34,5 @@ For more information contact angganurprasetya4@gmail.com
 ### Hava App Final UI
 ![App UI](https://github.com/prasetyanurangga/hava/raw/main/hava_app_ui.png)
 
-![Demo](https://github.com/prasetyanurangga/hava/raw/main/hava_app.mp4)
+![Demo](https://github.com/prasetyanurangga/hava/raw/main/hava_app.gif)
 
