@@ -14,6 +14,7 @@ import 'package:weather_icons/weather_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -25,9 +26,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   String lokasi = "";
   AnimationController rotationController;
+  PageController pageController;
   Position currentPosition;
   String currentWeather = "-";
   String currentAddress = "-";
+  String currentSunrise = "-";
+  double currentWind = 0.0;
+  int currentHum = 0;
   Color currentBackcolor;
   Color currentTextcolor;
   bool isSearch = false;
@@ -43,6 +48,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    pageController = PageController();
     rotationController = AnimationController(duration: const Duration(seconds: 5), vsync: this);
     final now = new DateTime.now();
     int hourNow = int.parse(DateFormat('H').format(now));// 28/03/2020
@@ -246,7 +252,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             backgroundColor: currentBackcolor,
             body:  SafeArea(
               child: Container(
-                padding: EdgeInsets.all(40),
+                padding: EdgeInsets.symmetric(vertical: 40),
                 color: currentBackcolor,
                 child: BlocListener<HavaBloc, HavaState>(
                   listener: (context, state) {
@@ -273,8 +279,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         currentData = state.havaModel;
                         currentTempCelcius = state.havaModel.current.tempC;
                         currentTempFahrenheit =  state.havaModel.current.tempF;
+                        currentWind = state.havaModel.current.windKph;
+                        currentHum = state.havaModel.current.humidity;
                         currentWeather = state.havaModel.current.condition.text;
                         currentCode = state.havaModel.current.condition.code;
+                        currentSunrise = state.havaModel.forecast.forecastday[0].astro.sunrise;
                         listForecastday = state.havaModel.forecast.forecastday;
                         isDay = state.havaModel.current.isDay;
                         currentBackcolor = (isDay==1) ? colorDayBack : colorNightBack;
@@ -289,85 +298,148 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     child : Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          children :[
-                            Row(
-                                children : [
-                                  Expanded(
-                                      child: Text(currentAddress, style: Theme.of(context).textTheme.headline6.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900)),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.thermostat_outlined, color: currentTextcolor),
-                                    onPressed: (){
-                                      _drawerController.toggle();
-                                      // getData();
-                                    }
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.refresh_outlined, color: currentTextcolor),
-                                    onPressed: (){
-                                      getData();
-                                    }
-                                  )
-                                ]
-                            ),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text("Today", style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
-                            ),
-                          ]
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 40),
+                          child: Column(
+                            children :[
+                              Row(
+                                  children : [
+                                    Expanded(
+                                        child: Text(currentAddress, style: Theme.of(context).textTheme.headline6.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900)),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(WeatherIcons.thermometer, color: currentTextcolor),
+                                      onPressed: (){
+                                        _drawerController.toggle();
+                                        // getData();
+                                      }
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.refresh_outlined, color: currentTextcolor),
+                                      onPressed: (){
+                                        getData();
+                                      }
+                                    )
+                                  ]
+                              ),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text("Todays", style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                              ),
+                            ]
+                          ),
                         ),
-                        Column(
-                          children:[
-                            BoxedIcon(getWeatherIcon(currentCode), color: currentTextcolor, size: 100),
-                            SizedBox(height: 2.5),
-                            Text(currentWeather, style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
-                            SizedBox(height: 10),
-                            Text("${isCelcius ? currentTempCelcius : currentTempFahrenheit}\u00B0", style: Theme.of(context).textTheme.headline3.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900)),
-                          ]
+                        Expanded(
+                          child: Column(
+                            children:[
+                            Spacer(),
+                              BoxedIcon(getWeatherIcon(currentCode), color: currentTextcolor, size: 100),
+                              Text("${isCelcius ? currentTempCelcius : currentTempFahrenheit}\u00B0", style: Theme.of(context).textTheme.headline3.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900)),
+                              SizedBox(
+                                width: 100,
+                                child: Text(currentWeather, textAlign: TextAlign.center,style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                              ),
+                              
+                            Spacer(),
+                            ]
+                          ),
                         ),
+                        
+
                         Container(
                           height: 100,
-                          // child: LineChartSample5()
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            itemCount: listForecastday.length,
-                            itemBuilder: (context, index) {
-                              var day = listForecastday[index].day;
-                              var parsedDate = DateTime.parse(listForecastday[index].date);
-                              if(index == 0){
-                                return Row(
+                          child: PageView(
+
+                            pageSnapping: true,
+                            controller: pageController,
+                            children : [
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 40),
+                                height: 100,
+                                child: ListView.separated(
+                                  shrinkWrap: true,
+                                  itemCount: listForecastday.length,
+                                  itemBuilder: (context, index) {
+                                    var day = listForecastday[index].day;
+                                    var parsedDate = DateTime.parse(listForecastday[index].date);
+                                    if(index == 0){
+                                      return Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children : [
+                                          Expanded(
+                                            child: Text("Tomorrow", style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                                          ),
+                                          Text("${isCelcius ? day.avgtempC : day.avgtempF}\u00B0", style: Theme.of(context).textTheme.headline6.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                                          BoxedIcon(getWeatherIcon(day.condition.code), color: currentTextcolor),
+                                        ]
+                                      );
+                                    }
+                                    else{
+                                      return Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children : [
+                                          Expanded(
+                                            child: Text(DateFormat('EEEE').format(parsedDate), style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                                          ),
+                                          Text("${isCelcius ? day.avgtempC : day.avgtempF}\u00B0", style: Theme.of(context).textTheme.headline6.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                                          BoxedIcon(getWeatherIcon(day.condition.code), color: currentTextcolor),
+                                        ]
+                                      );
+                                    }
+                                  },
+                                  separatorBuilder: (context, index) {
+                                    return Container(
+                                      height: 3,
+                                      margin: EdgeInsets.symmetric(vertical: 15),
+                                      color: currentTextcolor
+                                    );
+                                  },
+                                )
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 40),
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children : [
-                                    Expanded(
-                                      child: Text("Tomorrow", style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                                    Column(
+                                      children:[
+                                        BoxedIcon(WeatherIcons.sunrise, color: currentTextcolor, size: 25),
+                                        Text("Sunrise", style: Theme.of(context).textTheme.bodyText2.copyWith(color: currentTextcolor, fontWeight: FontWeight.w300)),
+                                        Text(currentSunrise, style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900, fontSize: 20)),
+                                      ]
                                     ),
-                                    Text("${isCelcius ? day.avgtempC : day.avgtempF}\u00B0", style: Theme.of(context).textTheme.headline6.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
-                                    BoxedIcon(getWeatherIcon(day.condition.code), color: currentTextcolor),
-                                  ]
-                                );
-                              }
-                              else{
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children : [
-                                    Expanded(
-                                      child: Text(DateFormat('EEEE').format(parsedDate), style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
+                                    Column(
+                                      children:[
+                                        BoxedIcon(WeatherIcons.strong_wind, color: currentTextcolor, size: 25),
+                                        Text("Wind", style: Theme.of(context).textTheme.bodyText2.copyWith(color: currentTextcolor, fontWeight: FontWeight.w300)),
+                                        Text("${currentWind}km/h", style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900, fontSize: 20)),
+                                      ]
                                     ),
-                                    Text("${isCelcius ? day.avgtempC : day.avgtempF}\u00B0", style: Theme.of(context).textTheme.headline6.copyWith(color: currentTextcolor, fontWeight: FontWeight.normal)),
-                                    BoxedIcon(getWeatherIcon(day.condition.code), color: currentTextcolor),
+                                    Column(
+                                      children:[
+                                        BoxedIcon(WeatherIcons.humidity, color: currentTextcolor, size: 25),
+                                        Text("Humidity", style: Theme.of(context).textTheme.bodyText2.copyWith(color: currentTextcolor, fontWeight: FontWeight.w300)),
+                                        Text("$currentHum%", style: Theme.of(context).textTheme.bodyText1.copyWith(color: currentTextcolor, fontWeight: FontWeight.w900, fontSize: 20)),
+                                      ]
+                                    ),
                                   ]
-                                );
-                              }
-                            },
-                            separatorBuilder: (context, index) {
-                              return Container(
-                                height: 3,
-                                margin: EdgeInsets.symmetric(vertical: 15),
-                                color: currentTextcolor
-                              );
-                            },
+                                ),
+                              )
+                            ]
                           )
+                        ),
+                        SizedBox(height: 25),
+                        SmoothPageIndicator(
+                          controller: pageController,  // PageController
+                          count:  2,
+                          effect:  ExpandingDotsEffect(
+                            dotHeight: 5,
+                            activeDotColor : currentTextcolor,
+                            dotColor: currentTextcolor.withOpacity(0.5)
+                          ),  // your preferred effect
+                          onDotClicked: (index){
+                              pageController.animateToPage(index, curve : Curves.fastOutSlowIn, duration: Duration(milliseconds: 300));
+                          }
                         ),
                       ]
                     )

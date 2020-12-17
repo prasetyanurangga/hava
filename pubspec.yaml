@@ -41,6 +41,7 @@ dependencies:
   flutter_zoom_drawer: ^1.0.4+1
   loader_overlay: ^1.1.1
   equatable: ^1.2.5
+  smooth_page_indicator: ^0.2.0
 
 dev_dependencies:
   flutter_test:
