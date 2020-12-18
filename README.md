@@ -24,7 +24,7 @@ Forecast App
 
 **UI Credit**
 
-- 
+- Design by:  Thomas Engebrand - [(Weather App)](https://dribbble.com/shots/3202409-Weather-App)
 
 **Contact**
 
